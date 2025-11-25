@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Elden Architect v11</title>
+    <title>Elden Architect v17</title>
+    
+    <!-- THIS LINE LOADS YOUR DATABASE FILE -->
+    <script src="data.js"></script>
+
     <style>
         /* --- VARIABLES & RESET --- */
         :root {
@@ -16,7 +20,7 @@
         body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; margin: 0; padding-bottom: 100px; }
 
         /* --- HEADER --- */
-        header { background: rgba(9,9,11,0.95); border-bottom: 1px solid var(--border); padding: 15px; text-align: center; position: sticky; top: 0; z-index: 99; backdrop-filter: blur(10px); }
+        header { background: rgba(9,9,11,0.95); border-bottom: 1px solid var(--border); padding: 15px; text-align: center; position: sticky; top: 0; z-index: 90; backdrop-filter: blur(10px); }
         h1 { margin: 0; font-size: 1.2rem; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; }
 
         /* --- CONTAINER --- */
@@ -30,20 +34,55 @@
         label { display: block; color: var(--text-dim); font-size: 0.7rem; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         select, input { width: 100%; background: #0f0f11; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-size: 1rem; appearance: none; }
         select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23d4b483%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 10px; }
-        
+        select:disabled { opacity: 0.5; color: #555; border-color: #333; }
+
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .flex-row { display: flex; gap: 10px; align-items: flex-end; }
+
+        /* --- BUTTONS --- */
+        .loc-btn {
+            background: #222; border: 1px solid var(--border); color: var(--gold);
+            padding: 10px 12px; border-radius: 6px; font-size: 0.9rem; cursor: pointer;
+            white-space: nowrap;
+        }
+        .loc-btn:active { background: var(--gold); color: black; }
 
         /* --- INFO PANEL --- */
         .selection-intel {
-            margin-top: 8px; padding: 8px 12px;
+            margin-top: 8px; padding: 10px;
             background: #222; border-left: 3px solid var(--blue);
-            color: #ccc; font-size: 0.8rem; line-height: 1.4;
+            color: #ccc; font-size: 0.85rem; line-height: 1.4;
             border-radius: 0 4px 4px 0;
             display: none; 
         }
         .selection-intel.active { display: block; animation: fadeIn 0.3s; }
-        .intel-title { font-weight: bold; color: #fff; margin-right: 5px; }
+        .intel-scale { color: var(--gold); font-weight: bold; margin-right: 10px; font-family: monospace; }
+        .intel-desc { font-style: italic; color: #aaa; }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 100;
+            display: none; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: #18181b; border: 1px solid var(--gold); border-radius: 12px;
+            width: 100%; max-width: 500px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modal-header {
+            padding: 15px; background: #222; border-bottom: 1px solid #333;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-title { color: var(--gold); font-weight: bold; text-transform: uppercase; }
+        .close-btn { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 20px; color: #ddd; font-size: 0.95rem; line-height: 1.5; }
+        .video-btn {
+            display: block; width: 100%; text-align: center; background: #cc0000; color: white;
+            padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 15px;
+        }
 
         /* --- OPTIONAL TOGGLE --- */
         details { background: #111; border-radius: 8px; overflow: hidden; margin-bottom: 15px; border: 1px solid var(--border); }
@@ -62,6 +101,10 @@
         .analysis-box { background: #202023; border-left: 4px solid #555; padding: 12px; margin-top: 10px; border-radius: 0 6px 6px 0; }
         .box-title { font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; opacity: 0.8; }
         .rec-box { background: rgba(59,130,246,0.1); border: 1px solid var(--blue); padding: 12px; border-radius: 8px; margin-top: 15px; }
+        
+        /* --- VERDICT --- */
+        .verdict-box { background: #111; border: 1px solid var(--gold); padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .verdict-score { font-size: 2rem; font-weight: 900; color: var(--gold); display: block; text-align: center; margin-bottom: 10px; }
         
         /* --- TAGS --- */
         .tag-cloud { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
@@ -110,11 +153,21 @@
 
         <!-- LOADOUT -->
         <div class="card">
-            <div class="card-header">Loadout</div>
+            <div class="card-header">Combat Setup</div>
             
+            <!-- BOSS SELECT -->
+            <div style="margin-bottom:20px;">
+                <label style="color:var(--red)">Primary Target (Boss)</label>
+                <select id="boss"></select>
+                <div id="boss-rec-box" class="rec-box" style="margin-top:10px; display:none;"></div>
+            </div>
+
             <div style="margin-bottom:10px">
                 <label>Main Weapon</label>
-                <select id="weapon"></select>
+                <div class="flex-row">
+                    <select id="weapon"></select>
+                    <button class="loc-btn" onclick="openLoc('weapon')">📍 Where?</button>
+                </div>
                 <div id="info-weapon" class="selection-intel"></div>
             </div>
             
@@ -122,14 +175,19 @@
                 <div>
                     <label>Affinity</label>
                     <select id="affinity"></select>
-                    <div id="info-affinity" class="selection-intel"></div>
                 </div>
                 <div>
                     <label>Ash of War</label>
-                    <select id="ash"></select>
-                    <div id="info-ash" class="selection-intel"></div>
+                    <div class="flex-row">
+                        <select id="ash"></select>
+                        <button class="loc-btn" onclick="openLoc('ash')">📍</button>
+                    </div>
                 </div>
             </div>
+            
+            <!-- Extra Info Panels for Affinity/Ash -->
+            <div id="info-affinity" class="selection-intel" style="margin-bottom:10px"></div>
+            <div id="info-ash" class="selection-intel" style="margin-bottom:10px"></div>
 
             <div style="margin-bottom:15px"><label style="color:var(--blue)">Playstyle</label>
                 <select id="style">
@@ -143,57 +201,75 @@
                 </select>
             </div>
 
-            <!-- OPTIONAL: ADVANCED -->
-            <details>
-                <summary>Advanced (Shields/Talismans)</summary>
+            <!-- AUTO-RECOMMENDED TALISMANS -->
+            <div class="analysis-box" style="border-color:var(--purple)">
+                <div class="box-title" style="color:var(--purple)">Recommended Talismans</div>
+                <div id="rec-tals" style="font-size:0.9rem">Select a weapon to see recommendations.</div>
+            </div>
+
+            <details style="margin-top:15px">
+                <summary>Advanced (Shields/Grease/Talisman)</summary>
                 <div class="opt-content">
-                    
-                    <!-- SHIELD SELECTOR (NEW) -->
                     <div style="margin-bottom:15px">
                         <label>Offhand Shield</label>
-                        <select id="shield"><option value="">None / Two-Handing</option></select>
+                        <div class="flex-row">
+                            <select id="shield"><option value="">None / Two-Handing</option></select>
+                            <button class="loc-btn" onclick="openLoc('shield')">📍</button>
+                        </div>
                         <div id="info-shield" class="selection-intel"></div>
                     </div>
-
-                    <div id="tal-info-box" class="selection-intel" style="margin-bottom:10px"></div>
+                    
+                    <!-- TALISMANS -->
                     <div class="row-2">
-                        <div><label>Talisman 1</label><select class="tal" data-idx="0"><option value="">None</option></select></div>
-                        <div><label>Talisman 2</label><select class="tal" data-idx="1"><option value="">None</option></select></div>
-                    </div>
-                    <div class="row-2">
-                        <div><label>Talisman 3</label><select class="tal" data-idx="2"><option value="">None</option></select></div>
-                        <div><label>Talisman 4</label><select class="tal" data-idx="3"><option value="">None</option></select></div>
-                    </div>
-                    <div class="row-2">
-                        <div><label>Buff/Spell</label>
-                            <select id="buff">
-                                <option value="">None</option>
-                                <option value="vow">Golden Vow</option>
-                                <option value="fgms">Flame, Grant Me Strength</option>
-                                <option value="terra">Terra Magica</option>
-                                <option value="shab">Howl of Shabriri</option>
-                            </select>
+                        <div>
+                            <label>Talisman 1</label>
+                            <div class="flex-row">
+                                <select id="tal-0" class="tal"><option value="">None</option></select>
+                                <button class="loc-btn" onclick="openLoc('tal-0')">📍</button>
+                            </div>
                         </div>
-                        <div><label>Grease</label>
-                            <select id="grease">
-                                <option value="">None</option>
-                                <option value="fire">Fire Grease</option>
-                                <option value="magic">Magic Grease</option>
-                                <option value="lightning">Lightning Grease</option>
-                                <option value="holy">Holy Grease</option>
-                                <option value="blood">Blood Grease</option>
-                                <option value="freeze">Freezing Grease</option>
-                                <option value="rot">Rot Grease</option>
-                            </select>
+                        <div>
+                            <label>Talisman 2</label>
+                            <div class="flex-row">
+                                <select id="tal-1" class="tal"><option value="">None</option></select>
+                                <button class="loc-btn" onclick="openLoc('tal-1')">📍</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row-2">
+                        <div>
+                            <label>Talisman 3</label>
+                            <div class="flex-row">
+                                <select id="tal-2" class="tal"><option value="">None</option></select>
+                                <button class="loc-btn" onclick="openLoc('tal-2')">📍</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Talisman 4</label>
+                            <div class="flex-row">
+                                <select id="tal-3" class="tal"><option value="">None</option></select>
+                                <button class="loc-btn" onclick="openLoc('tal-3')">📍</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tal-info-box" class="selection-intel" style="margin-bottom:10px"></div>
+
+                    <div class="row-2">
+                        <div>
+                            <label>Buff / Spell</label>
+                            <div class="flex-row">
+                                <select id="buff"><option value="">None</option></select>
+                                <button class="loc-btn" onclick="openLoc('buff')">📍</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Grease (Weapon Coat)</label>
+                            <select id="grease"></select>
                         </div>
                     </div>
                 </div>
             </details>
-
-            <div style="border-top:1px solid var(--border); padding-top:15px;">
-                <label style="color:var(--red)">Enemy Boss</label>
-                <select id="boss"></select>
-            </div>
         </div>
 
         <!-- ANALYSIS RESULTS -->
@@ -205,6 +281,13 @@
             <div id="tags" class="tag-cloud"></div>
 
             <div id="results"></div>
+            
+            <!-- FINAL VERDICT -->
+            <div class="verdict-box">
+                <div class="box-title" style="color:var(--gold); text-align:center;">Final Verdict</div>
+                <span id="v-score" class="verdict-score">85%</span>
+                <p id="v-text" style="text-align:justify; font-size:0.9rem; line-height:1.5; color:#ccc;"></p>
+            </div>
         </div>
         
         <div style="height:50px"></div>
@@ -214,11 +297,24 @@
     <div id="view-lib" class="view">
         <div class="card">
             <div class="card-header">Weapon Database</div>
-            <input type="text" id="search" placeholder="Search 60+ Weapons/Shields..." style="margin-bottom:10px">
+            <input type="text" id="search" placeholder="Search 200+ Items..." style="margin-bottom:10px">
             <div id="lib-list"></div>
         </div>
     </div>
 
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">Location Intel</span>
+            <button class="close-btn" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body" id="modal-body">
+            <!-- Content Injected Here -->
+        </div>
+    </div>
 </div>
 
 <!-- NAV -->
@@ -232,234 +328,26 @@
 </div>
 
 <script>
-/* --- DATA --- */
-const DB = {
-    weapons: [
-        // Somber
-        { id: 'rob', name: "Rivers of Blood", type: 'Somber', bleed: true, dmg: 'Slash/Fire', skill: "Corpse Piler", stats:['dex','arc'], heavy:false, desc: "Top-tier bleed. L2 is a rapid flurry." },
-        { id: 'moon', name: "Moonveil", type: 'Somber', bleed: true, dmg: 'Slash/Magic', skill: "Transient Moonlight", stats:['dex','int'], heavy:false, desc: "Fast magic beams. High stance damage." },
-        { id: 'blas', name: "Blasphemous Blade", type: 'Somber', bleed: false, dmg: 'Standard/Fire', skill: "Taker's Flames", stats:['str','fai'], heavy:true, desc: "Heals HP on kill & hit. PvE King." },
-        { id: 'fang', name: "Bloodhound's Fang", type: 'Somber', bleed: true, dmg: 'Slash', skill: "Bloodhound's Finesse", stats:['dex','str'], heavy:true, desc: "Boosted Jump Attacks. Can be Greased." },
-        { id: 'ruins', name: "Ruins Greatsword", type: 'Somber', bleed: false, dmg: 'Standard/Magic', skill: "Wave of Destruction", stats:['str'], heavy:true, desc: "Gravity magic wave AoE." },
-        { id: 'mohg', name: "Mohgwyn's Spear", type: 'Somber', bleed: true, dmg: 'Pierce/Fire', skill: "Bloodboon Ritual", stats:['str','arc'], heavy:true, desc: "AoE Room nuke. Hits through walls." },
-        { id: 'dark', name: "Dark Moon Greatsword", type: 'Somber', bleed: false, dmg: 'Standard/Magic', skill: "Moonlight Greatsword", stats:['int','str'], heavy:true, desc: "Buffs weapon. R2 fires magic beams (0 FP)." },
-        { id: 'bolt', name: "Bolt of Gransax", type: 'Somber', bleed: false, dmg: 'Pierce/Lightning', skill: "Ancient Lightning Spear", stats:['dex'], heavy:false, desc: "Longest range sniper skill." },
-        { id: 'morgott', name: "Morgott's Cursed Sword", type: 'Somber', bleed: true, dmg: 'Slash/Fire', skill: "Cursed-Blood Slice", stats:['dex','arc'], heavy:true, desc: "Fastest Curved Greatsword." },
-        { id: 'godslayer', name: "Godslayer's Greatsword", type: 'Somber', bleed: false, dmg: 'Standard/Fire', skill: "Queen's Black Flame", stats:['dex','fai'], heavy:true, desc: "Black Flame deals % HP damage." },
-        { id: 'black_knife', name: "Black Knife", type: 'Somber', bleed: false, dmg: 'Slash/Holy', skill: "Blade of Death", stats:['dex','fai'], heavy:false, desc: "Reduces enemy Max HP by 10%." },
-        { id: 'vyke', name: "Vyke's War Spear", type: 'Somber', bleed: false, dmg: 'Pierce/Fire', skill: "Frenzyflame Thrust", stats:['dex','fai'], heavy:true, desc: "Inflicts Madness (PvP) and Fire." },
-        { id: 'ordovis', name: "Ordovis's Greatsword", type: 'Somber', bleed: false, dmg: 'Standard/Holy', skill: "Ordovis's Vortex", stats:['str','fai'], heavy:true, desc: "Holy AoE spin. High hyper armor." },
-        { id: 'wing', name: "Wing of Astel", type: 'Somber', bleed: false, dmg: 'Slash/Magic', skill: "Nebula", stats:['int','dex'], heavy:false, desc: "R2 fires magic waves. Skill is AoE explosion." },
-        // Standard
-        { id: 'guts', name: "Greatsword (Guts)", type: 'Std', bleed: false, dmg: 'Standard', stats:['str'], heavy:true, desc: "Massive reach. Crouch poke is legendary." },
-        { id: 'mace', name: "Great Mace", type: 'Std', bleed: false, dmg: 'Strike', stats:['str'], heavy:true, desc: "Looks cool. High stance damage." },
-        { id: 'giant', name: "Giant-Crusher", type: 'Std', bleed: false, dmg: 'Strike', stats:['str'], heavy:true, desc: "Highest single hit damage in game." },
-        { id: 'star', name: "Star Fist", type: 'Std', bleed: true, dmg: 'Strike', stats:['str'], heavy:false, desc: "Fast bleed application. Hits very hard." },
-        { id: 'naga', name: "Nagakiba", type: 'Std', bleed: true, dmg: 'Slash/Pierce', stats:['dex'], heavy:false, desc: "Longest Katana. Incredible reach." },
-        { id: 'uchi', name: "Uchigatana", type: 'Std', bleed: true, dmg: 'Slash/Pierce', stats:['dex'], heavy:false, desc: "Reliable starter. Good scaling." },
-        { id: 'clay', name: "Claymore", type: 'Std', bleed: false, dmg: 'Standard/Pierce', stats:['str','dex'], heavy:true, desc: "Versatile. Unique thrust R2." },
-        { id: 'zwei', name: "Zweihander", type: 'Std', bleed: false, dmg: 'Standard/Pierce', stats:['dex','str'], heavy:true, desc: "Lightest Colossal Sword. Long reach." },
-        { id: 'night', name: "Nightrider Glaive", type: 'Std', bleed: false, dmg: 'Slash', stats:['str'], heavy:true, desc: "S-Tier Strength scaling Halberd." },
-        { id: 'cross', name: "Cross-Naginata", type: 'Std', bleed: true, dmg: 'Pierce', stats:['dex'], heavy:false, desc: "Unique moveset. Good for status." },
-        { id: 'ant', name: "Antspur Rapier", type: 'Std', bleed: false, dmg: 'Pierce', stats:['dex'], heavy:false, desc: "Innate Scarlet Rot. Can be infused." },
-        { id: 'scav', name: "Scavenger's Curved Sword", type: 'Std', bleed: true, dmg: 'Slash', stats:['dex'], heavy:false, desc: "Innate bleed. Best for Occult infusion." },
-        { id: 'peel', name: "Godskin Peeler", type: 'Std', bleed: false, dmg: 'Standard', stats:['dex'], heavy:false, desc: "Running R2 hits 4 times. Status king." },
-        { id: 'hook', name: "Hookclaws", type: 'Std', bleed: true, dmg: 'Slash', stats:['dex'], heavy:false, desc: "Fast attacks. Innate bleed." },
-        { id: 'mis', name: "Misericorde", type: 'Std', bleed: false, dmg: 'Pierce', stats:['dex'], heavy:false, desc: "140 Crit. Highest critical damage." },
-        { id: 'exe', name: "Executioner's Greataxe", type: 'Std', bleed: false, dmg: 'Standard', stats:['str'], heavy:true, desc: "Boosted Crit damage. Long reach." },
-        { id: 'grave', name: "Grave Scythe", type: 'Std', bleed: true, dmg: 'Slash', stats:['str','dex'], heavy:true, desc: "Boosts Vitality. Good anti-shield." },
-        { id: 'lance', name: "Lance", type: 'Std', bleed: false, dmg: 'Pierce', stats:['str'], heavy:true, desc: "Greatshield poker. High poise dmg." },
-        { id: 'broad', name: "Broadsword", type: 'Std', bleed: false, dmg: 'Standard', stats:['str'], heavy:false, desc: "Highest damage Straight Sword." },
-        { id: 'bandit', name: "Bandit's Curved Sword", type: 'Std', bleed: false, dmg: 'Slash', stats:['str','dex'], heavy:false, desc: "Longest Curved Sword. High damage." },
-        // DLC
-        { id: 'milady', name: "Milady (DLC)", type: 'Std', bleed: false, dmg: 'Standard/Pierce', stats:['dex'], heavy:false, desc: "Light Greatsword. Fluid, elegant combos." },
-        { id: 'back', name: "Backhand Blade (DLC)", type: 'Std', bleed: false, dmg: 'Slash', stats:['dex'], heavy:false, desc: "Swift Slash skill is OP. Fast." },
-        { id: 'fiend', name: "Bloodfiend's Arm (DLC)", type: 'Std', bleed: true, dmg: 'Strike', stats:['str','arc'], heavy:true, desc: "Broken bleed scaling (Blood affinity)." },
-        { id: 'steel', name: "Black Steel Greathammer", type: 'Std', bleed: false, dmg: 'Strike', stats:['str','fai'], heavy:true, desc: "Guard Counters explode with Holy." },
-        { id: 'perfume', name: "Lightning Perfume Bottle", type: 'Std', bleed: false, dmg: 'Lightning', stats:['dex','fai'], heavy:false, desc: "Rolling Sparks skill hits ground for huge dmg." },
-        { id: 'messmer', name: "Spear of the Impaler", type: 'Somber', bleed: false, dmg: 'Pierce/Fire', skill: "Messmer's Assault", stats:['dex','fai'], heavy:false, desc: "Chargeable heavy throw. Explosive skill." },
-        { id: 'bayle_kat', name: "Dragon-Hunter's Katana", type: 'Somber', bleed: true, dmg: 'Slash/Pierce', skill: "Dragonwound Slash", stats:['str','dex'], heavy:false, desc: "Bonus damage vs Dragons." },
-        { id: 'rellana', name: "Rellana's Twin Blades", type: 'Somber', bleed: false, dmg: 'Magic/Fire', skill: "Moon-and-Fire", stats:['int','fai'], heavy:false, desc: "Stance skill: R1 Magic, R2 Fire." },
-        { id: 'solitude', name: "Greatsword of Solitude", type: 'Somber', bleed: false, dmg: 'Standard', skill: "Solitary Moon Slash", stats:['str'], heavy:true, desc: "High block negation. Projectile slash." },
-        { id: 'anvil', name: "Anvil Hammer", type: 'Somber', bleed: false, dmg: 'Strike/Fire', skill: "Smithing Art Spears", stats:['str','fai'], heavy:true, desc: "Uppercut skill creates spears." }
-    ],
-    shields: [
-        { id: 'finger', name: "Fingerprint Stone Shield", type: 'Greatshield', desc: "Highest guard boost in the game. Heavy.", skill: "Shield Bash" },
-        { id: 'brass', name: "Brass Shield", type: 'Medium', desc: "Best medium shield guard boost. No skill by default.", skill: "No Skill" },
-        { id: 'buckler', name: "Buckler", type: 'Small', desc: "Unique 'Buckler Parry' has best frames.", skill: "Buckler Parry" },
-        { id: 'jelly', name: "Jellyfish Shield", type: 'Greatshield', desc: "Skill boosts all damage by 20%.", skill: "Contagious Fury" },
-        { id: 'erdtree', name: "Erdtree Greatshield", type: 'Greatshield', desc: "Reflects magic spells back at enemies.", skill: "Golden Retaliation" },
-        { id: 'carian', name: "Carian Knight's Shield", type: 'Medium', desc: "High magic damage negation.", skill: "No Skill" },
-        { id: 'turtle', name: "Great Turtle Shell", type: 'Medium', desc: "Passively boosts stamina recovery.", skill: "Barricade Shield" },
-        { id: 'icon', name: "Icon Shield", type: 'Greatshield', desc: "Passively heals HP over time.", skill: "Shield Bash" },
-        { id: 'visage', name: "Visage Shield", type: 'Greatshield', desc: "Shoots fire spray while blocking.", skill: "Tongues of Fire" },
-        { id: 'ant', name: "Ant's Skull Plate", type: 'Greatshield', desc: "Hardness causes attacks to bounce. Boosts Immunity.", skill: "Shield Bash" },
-        { id: 'one_eyed', name: "One-Eyed Shield", type: 'Greatshield', desc: "Fires a literal cannon shot.", skill: "Flame Spit" },
-        { id: 'coil', name: "Coil Shield", type: 'Small', desc: "Inflicts deadly poison (venom).", skill: "Viper Bite" },
-        { id: 'mirror', name: "Silver Mirrorshield", type: 'Medium', desc: "Extremely high magic negation.", skill: "No Skill" },
-        { id: 'beast', name: "Beastman's Jar-Shield", type: 'Medium', desc: "Lightweight with decent guard.", skill: "No Skill" },
-        { id: 'verdigris', name: "Verdigris Greatshield (DLC)", type: 'Greatshield', desc: "Highest guard boost in DLC.", skill: "Moore's Charge" }
-    ],
-    bosses: [
-        { id: 'malenia', name: 'Malenia', weak: ['Fire', 'Bleed', 'Frost', 'Stagger'], resist: ['Holy', 'Rot'], tip: 'Weak to stagger. Use Frost Pots for Waterfowl.' },
-        { id: 'radagon', name: 'Radagon', weak: ['Fire', 'Strike'], resist: ['Holy', 'Bleed'], tip: 'Immune to bleed. Strike damage works best.' },
-        { id: 'elden', name: 'Elden Beast', weak: ['Physical'], resist: ['Holy', 'Status'], tip: 'Target the chest scar. Use Pest Threads or Black Flame.' },
-        { id: 'mohg', name: 'Mohg', weak: ['Bleed'], resist: ['Fire'], tip: 'Purifying Crystal Tear is mandatory.' },
-        { id: 'maliketh', name: 'Maliketh', weak: ['Physical'], resist: ['Holy'], tip: 'Low HP. Use Blasphemous Claw.' },
-        { id: 'godskin', name: 'Godskin Duo', weak: ['Sleep', 'Bleed', 'Slash'], resist: ['Holy', 'Fire'], tip: 'Throw Sleep Pots to isolate 1v1.' },
-        { id: 'rykard', name: 'Rykard', weak: ['Serpent'], resist: ['Fire'], tip: 'Must use Serpent-Hunter spear.' },
-        { id: 'giant', name: 'Fire Giant', weak: ['Slash', 'Bleed'], resist: ['Fire'], tip: 'Attack the unarmored ankle, then hands.' },
-        { id: 'placid', name: 'Placidusax', weak: ['Pierce'], resist: ['Status'], tip: 'Ancient Dragon. Use Pierce damage to tail.' },
-        { id: 'tree', name: 'Draconic Tree Sentinel', weak: ['Strike', 'Rot'], resist: ['Lightning'], tip: 'Use Rotten Stray or Strike weapons.' },
-        { id: 'night', name: "Night's Cavalry", weak: ['Lightning'], resist: ['Slash'], tip: 'Knock them off horse for critical.' },
-        { id: 'bird', name: "Death Rite Bird", weak: ['Holy', 'Strike'], resist: ['Magic'], tip: 'Holy Pots / Sacred Blade melt it.' },
-        { id: 'bell', name: "Bell Bearing Hunter", weak: ['Pierce', 'Lightning'], resist: ['Slash'], tip: 'Parry him or stay extremely close.' },
-        { id: 'watch', name: "Erdtree Watchdog", weak: ['Strike'], resist: ['Magic', 'Slash'], tip: 'Use heavy strike weapons. Crystal Darts confuse it.' },
-        { id: 'garg', name: "Valiant Gargoyles", weak: ['Strike', 'Magic'], resist: ['Slash', 'Fire'], tip: 'Immune to status. Magic/Strike is key.' },
-        { id: 'astel', name: "Astel, Naturalborn", weak: ['Physical'], resist: ['Magic', 'Elemental'], tip: 'Hit the head. Gravity magic.' },
-        { id: 'rennala', name: "Rennala", weak: ['Physical', 'Bleed'], resist: ['Magic'], tip: 'Very weak to physical stagger.' },
-        { id: 'ancestor', name: "Regal Ancestor Spirit", weak: ['Fire', 'Holy'], resist: ['Magic'], tip: 'Weak to Fire/Holy. Passive fight.' },
-        { id: 'fortissax', name: "Lichdragon Fortissax", weak: ['Pierce'], resist: ['Lightning', 'Holy'], tip: 'Hit the head/legs. Avoid lightning.' },
-        { id: 'margit', name: "Margit/Morgott", weak: ['Slash', 'Bleed'], resist: ['Holy'], tip: 'Use Shackle item to bind him.' },
-        // DLC
-        { id: 'messmer', name: 'Messmer (DLC)', weak: ['Bleed', 'Frost', 'Slash'], resist: ['Fire'], tip: 'Resists Fire. Punish snake attacks.' },
-        { id: 'bayle', name: 'Bayle (DLC)', weak: ['Dragon'], resist: ['Lightning', 'Fire'], tip: 'Use Dragon-Hunter Katana skill.' },
-        { id: 'radahn_dlc', name: 'Consort Radahn (DLC)', weak: ['Pierce', 'Rot', 'Bleed'], resist: ['Holy', 'Slash'], tip: 'Use Greatshield + Poke weapon.' },
-        { id: 'midra', name: 'Midra (DLC)', weak: ['Bleed', 'Slash'], resist: ['Fire'], tip: 'Very low poise. Stagger him.' },
-        { id: 'gaius', name: 'Gaius (DLC)', weak: ['Holy', 'Lightning'], resist: ['Physical'], tip: 'Dodge INTO charge. Use Holy.' },
-        { id: 'scadu', name: 'Scadutree Avatar (DLC)', weak: ['Fire'], resist: ['Holy'], tip: 'Hit the head (flower). Use Fire.' },
-        { id: 'hippo', name: 'Golden Hippo (DLC)', weak: ['Lightning', 'Slash'], resist: ['Holy'], tip: 'Use Lightning. Hit head.' },
-        { id: 'romina', name: 'Romina (DLC)', weak: ['Bleed', 'Frost'], resist: ['Rot'], tip: 'Fast attacks. Use Bleed.' },
-        { id: 'lion', name: 'Dancing Lion (DLC)', weak: ['Fire', 'Pierce'], resist: ['Holy'], tip: 'Weak to Pierce. Don\'t lock on under him.' }
-    ],
-    affinities: [
-        { id: 'std', name: 'Standard', desc: "Default scaling. No penalty." },
-        { id: 'heavy', name: 'Heavy (Str)', buff: {s:2}, desc: "High STR scaling. Low DEX." },
-        { id: 'keen', name: 'Keen (Dex)', buff: {d:2}, desc: "High DEX scaling. Low STR." },
-        { id: 'qual', name: 'Quality', buff: {s:1, d:1}, desc: "Balanced STR/DEX scaling." },
-        { id: 'magic', name: 'Magic (Int)', type:'Magic', desc: "Adds Magic dmg. Scales with INT." },
-        { id: 'fire', name: 'Fire (Str)', type:'Fire', desc: "Adds Fire dmg. Scales with STR." },
-        { id: 'flame', name: 'Flame Art (Fai)', type:'Fire', desc: "Adds Fire dmg. Scales with FAI." },
-        { id: 'light', name: 'Lightning (Dex)', type:'Lightning', desc: "Adds Lightning dmg. Scales with DEX." },
-        { id: 'sacred', name: 'Sacred (Fai)', type:'Holy', desc: "Adds Holy dmg. Scales with FAI." },
-        { id: 'blood', name: 'Blood (Arc)', type:'Phys', effect:'Bleed', desc: "Adds Bleed buildup. Scales with ARC." },
-        { id: 'occult', name: 'Occult (Arc)', type:'Phys', desc: "Phys dmg scales with ARC. Buffs native bleed." },
-        { id: 'cold', name: 'Cold (Int)', type:'Magic', effect:'Frost', desc: "Adds Frostbite. Scales with INT/STR/DEX." },
-        { id: 'poison', name: 'Poison (Arc)', type:'Phys', effect:'Poison', desc: "Adds Poison. Scales with ARC." }
-    ],
-    ashes: [
-        { id: 'lion', name: "Lion's Claw", type: 'Phys', desc: "Somersault slam. Huge hyper armor & stance dmg." },
-        { id: 'unsheathe', name: "Unsheathe", type: 'Phys', desc: "Fast katana stance. High damage & poise break." },
-        { id: 'spin', name: "Spinning Slash", type: 'Phys', desc: "Fast spin combo. Excellent for status buildup." },
-        { id: 'sep', name: "Seppuku", type: 'Phys', desc: "Stab self to massively buff Bleed buildup." },
-        { id: 'crag', name: "Cragblade", type: 'Phys', desc: "Buffs weapon Physical Dmg & Stance Dmg." },
-        { id: 'flame', name: "Flaming Strike", type: 'Fire', desc: "Fire arc + heavy attack buffs weapon with Fire." },
-        { id: 'sacred', name: "Sacred Blade", type: 'Holy', desc: "Fires holy projectile + buffs weapon with Holy." },
-        { id: 'ice', name: "Ice Spear", type: 'Magic', desc: "Fires ice projectile. Huge Frost buildup & stance dmg." },
-        { id: 'impale', name: "Impaling Thrust", type: 'Phys', desc: "Quick thrust. Pierces shields." },
-        { id: 'pierce', name: "Piercing Fang", type: 'Phys', desc: "Lunging thrust. Ignores shields entirely." },
-        { id: 'royal', name: "Royal Knight's Resolve", type: 'Phys', desc: "+80% damage on next hit." },
-        { id: 'endure', name: "Endure", type: 'Phys', desc: "Briefly boosts poise and defense to tank hits." },
-        { id: 'giant', name: "Giant Hunt", type: 'Phys', desc: "Launches foes into air. Great roll catch." },
-        { id: 'phantom', name: "Phantom Slash", type: 'Phys', desc: "Summons phantom for range + gap close." },
-        { id: 'sword', name: "Sword Dance", type: 'Phys', desc: "Rapid gap closing combo. Good roll catch." },
-        { id: 'double', name: "Double Slash", type: 'Phys', desc: "Genichiro combo. Great on Nagakiba with Bloodflame." },
-        { id: 'glint', name: "Glintstone Pebble", type: 'Magic', desc: "Magic dart + thrust combo. True combo in PvP." },
-        { id: 'storm', name: "Storm Blade", type: 'Phys', desc: "Ranged wind projectile. Spammable." },
-        { id: 'caller', name: "Stormcaller", type: 'Phys', desc: "Traps enemies in wind storm. True combo." },
-        { id: 'step', name: "Bloodhound's Step", type: 'Phys', desc: "Invisible dodge. High i-frames." },
-        { id: 'quick', name: "Quickstep", type: 'Phys', desc: "Fast dodge. Good for backstabs." },
-        { id: 'grandeur', name: "Carian Grandeur", type: 'Magic', desc: "Chargeable magic sword. Nuclear damage." },
-        { id: 'prelate', name: "Prelate's Charge", type: 'Fire', desc: "Run forward with fire. Stunlocks enemies." },
-        { id: 'tornado', name: "Black Flame Tornado", type: 'Fire', desc: "Melts bosses with % HP damage." },
-        { id: 'waves', name: "Waves of Darkness", type: 'Magic', desc: "3-hit gravity AoE. Hyper armor." },
-        { id: 'hoar', name: "Hoarfrost Stomp", type: 'Magic', desc: "Cone frost AoE. Fast cast." },
-        { id: 'light', name: "Lightning Slash", type: 'Lightning', desc: "Lightning strike + buffs weapon." },
-        { id: 'bolt', name: "Thunderbolt", type: 'Lightning', desc: "Ranged lightning strike from above." },
-        { id: 'pray', name: "Prayerful Strike", type: 'Holy', desc: "Slow slam that heals 30% HP on hit." },
-        { id: 'golden', name: "Golden Vow", type: 'Holy', desc: "Buffs Atk & Def for self and allies." },
-        { id: 'erupt', name: "Eruption", type: 'Fire', desc: "Lava slam. Leaves lava pool." },
-        { id: 'grav', name: "Gravitas", type: 'Magic', desc: "Pulls enemies in. Good for flying mobs." },
-        { id: 'wild', name: "Wild Strikes", type: 'Phys', desc: "Continuous swinging. High poise." },
-        { id: 'roar', name: "Braggart's Roar", type: 'Phys', desc: "Buffs Atk, Def, and Stamina recovery." },
-        { id: 'stamp', name: "Stamp (Upward Cut)", type: 'Phys', desc: "Tanks hit then launches enemy." },
-        { id: 'parry', name: "Parry", type: 'Phys', desc: "Deflects attacks to allow critical hit." },
-        { id: 'carian', name: "Carian Retaliation", type: 'Magic', desc: "Parries spells and turns them into glintblades." },
-        { id: 'wall', name: "Storm Wall", type: 'Phys', desc: "Parries attacks and deflects arrows." },
-        { id: 'bash', name: "Shield Bash", type: 'Phys', desc: "Attack while blocking. Uninterruptible." },
-        { id: 'barr', name: "Barricade Shield", type: 'Phys', desc: "Temporarily boosts shield hardness/guard." },
-        { id: 'raptor', name: "Raptor of the Mists", type: 'Phys', desc: "Jump into air when hit. Good vs chariots." },
-        { id: 'assassin', name: "Assassin's Gambit", type: 'Phys', desc: "Self-harm to become nearly invisible." },
-        { id: 'lure', name: "White Shadow's Lure", type: 'Phys', desc: "Distracts humanoids/beasts." },
-        { id: 'life', name: "Lifesteal Fist", type: 'Magic', desc: "Grabs humanoids, steals HP/FP." },
-        { id: 'ground', name: "Ground Slam", type: 'Phys', desc: "Butt slam. AoE shockwave." },
-        { id: 'kick', name: "Kick", type: 'Phys', desc: "Instantly breaks guard of shielded enemies." },
-        { id: 'repeat', name: "Repeating Thrust", type: 'Phys', desc: "Rapid flurry of thrusts. Good for rot." },
-        { id: 'charge', name: "Charge Forth", type: 'Phys', desc: "Long distance charge attack." },
-        { id: 'poison', name: "Poisonous Mist", type: 'Phys', desc: "Releases poison cloud. Hits through walls." },
-        { id: 'chill', name: "Chilling Mist", type: 'Magic', desc: "Releases frost cloud + buffs weapon." }
-    ],
-    talismans: [
-        { id: 'shard', name: "Shard of Alexander", tag: 'skill', desc: "Boosts Skill damage by 15%." },
-        { id: 'blood', name: "Lord of Blood's Exultation", tag: 'bleed', desc: "Atk +20% when Bleed occurs." },
-        { id: 'rot', name: "Kindred of Rot's Exultation", tag: 'rot', desc: "Atk +20% when Poison/Rot occurs." },
-        { id: 'claw', name: "Claw Talisman", tag: 'jump', desc: "Boosts Jump Attacks by 15%." },
-        { id: 'curved', name: "Curved Sword Talisman", tag: 'guard', desc: "Boosts Guard Counters by 20%." },
-        { id: 'axe', name: "Axe Talisman", tag: 'charge', desc: "Boosts Charged Attacks by 10%." },
-        { id: 'spear', name: "Spear Talisman", tag: 'counter', desc: "Boosts Counter Dmg (Pierce) by 15%." },
-        { id: 'hammer', name: "Hammer Talisman", tag: 'stam', desc: "Increases stamina dmg against shields." },
-        { id: 'dagger', name: "Dagger Talisman", tag: 'crit', desc: "Boosts Critical Hits by 17%." },
-        { id: 'fire', name: "Fire Scorpion Charm", tag: 'fire', desc: "Fire Dmg +12%, Phys Negation -10%." },
-        { id: 'magic', name: "Magic Scorpion Charm", tag: 'magic', desc: "Magic Dmg +12%, Phys Negation -10%." },
-        { id: 'holy', name: "Sacred Scorpion Charm", tag: 'holy', desc: "Holy Dmg +12%, Phys Negation -10%." },
-        { id: 'light', name: "Lightning Scorpion Charm", tag: 'light', desc: "Lightning Dmg +12%, Phys Negation -10%." },
-        { id: 'rotten', name: "Rotten Winged Sword", tag: 'multi', desc: "Greatly boosts Atk on consecutive hits." },
-        { id: 'mill', name: "Millicent's Prosthesis", tag: 'multi', desc: "Boosts Atk on hits +5 DEX." },
-        { id: 'godskin', name: "Godskin Swaddling Cloth", tag: 'heal', desc: "Heals HP on consecutive hits." },
-        { id: 'ritual_s', name: "Ritual Sword Talisman", tag: 'fullhp', desc: "Atk +10% when HP is full." },
-        { id: 'ritual_d', name: "Ritual Shield Talisman", tag: 'fullhp', desc: "Def +30% when HP is full." },
-        { id: 'red', name: "Red-Feathered Branchsword", tag: 'lowhp', desc: "Atk +20% when HP is low." },
-        { id: 'blue', name: "Blue-Feathered Branchsword", tag: 'lowhp', desc: "Def +50% when HP is low." },
-        { id: 'dragon', name: "Dragoncrest Greatshield", tag: 'def', desc: "Boosts Physical Negation by 20%." },
-        { id: 'pearl', name: "Pearldrake Talisman +2", tag: 'def', desc: "Boosts Non-Phys Negation." },
-        { id: 'turtle', name: "Green Turtle Talisman", tag: 'stam', desc: "Boosts Stamina Recovery speed." },
-        { id: 'amber_h', name: "Crimson Amber Medallion", tag: 'stat', desc: "Greatly boosts Max HP." },
-        { id: 'amber_f', name: "Cerulean Amber Medallion", tag: 'stat', desc: "Greatly boosts Max FP." },
-        { id: 'amber_s', name: "Viridian Amber Medallion", tag: 'stat', desc: "Greatly boosts Max Stamina." },
-        { id: 'favor', name: "Erdtree's Favor +2", tag: 'stat', desc: "Boosts HP, Stamina, and Equip Load." },
-        { id: 'arsenal', name: "Great-Jar's Arsenal", tag: 'equip', desc: "Greatly boosts Equip Load." },
-        { id: 'rad_sore', name: "Radagon's Soreseal", tag: 'stat', desc: "+5 Vig/End/Str/Dex, but take more dmg." },
-        { id: 'mar_sore', name: "Marika's Soreseal", tag: 'stat', desc: "+5 Mind/Int/Fai/Arc, but take more dmg." },
-        { id: 'bull', name: "Bull-Goat's Talisman", tag: 'poise', desc: "Boosts Poise by 33%." },
-        { id: 'godfrey', name: "Godfrey Icon", tag: 'charge', desc: "Boosts Charged Spells/Skills by 15%." },
-        { id: 'rad_icon', name: "Radagon Icon", tag: 'cast', desc: "Shortens spell casting time." },
-        { id: 'flock', name: "Flock's Canvas Talisman", tag: 'incant', desc: "Greatly boosts Incantations." },
-        { id: 'graven', name: "Graven-Mass Talisman", tag: 'sorc', desc: "Greatly boosts Sorceries." },
-        { id: 'old', name: "Old Lord's Talisman", tag: 'buff', desc: "Extends spell effect duration." },
-        { id: 'carian', name: "Carian Filigreed Crest", tag: 'fp', desc: "Lowers Skill FP cost by 25%." },
-        { id: 'taker', name: "Taker's Cameo", tag: 'heal', desc: "Restores HP upon defeating enemies." },
-        { id: 'ancestor', name: "Ancestral Spirit's Horn", tag: 'fp', desc: "Restores FP upon defeating enemies." },
-        { id: 'gold', name: "Gold Scarab", tag: 'farm', desc: "Increases Rune acquisition." },
-        { id: 'silver', name: "Silver Scarab", tag: 'farm', desc: "Increases Item Discovery." },
-        { id: 'crepus', name: "Crepus's Vial", tag: 'stealth', desc: "Eliminates all sound made by wearer." },
-        { id: 'shabriri', name: "Shabriri's Woe", tag: 'aggro', desc: "Constantly attracts enemies' aggression." },
-        { id: 'cat', name: "Longtail Cat Talisman", tag: 'util', desc: "Prevents fall damage (not death)." },
-        { id: 'star_h', name: "Starscourge Heirloom", tag: 'stat', desc: "Raises STR by 5." },
-        { id: 'pros_h', name: "Prosthesis-Wearer Heirloom", tag: 'stat', desc: "Raises DEX by 5." },
-        { id: 'gazer', name: "Stargazer Heirloom", tag: 'stat', desc: "Raises INT by 5." },
-        { id: 'finger', name: "Two Fingers Heirloom", tag: 'stat', desc: "Raises FAI by 5." },
-        { id: 'blue_dance', name: "Blue Dancer Charm", tag: 'naked', desc: "Higher dmg with lower equip load." }
-    ]
-};
+/* --- LOGIC --- */
+function sortByName(a, b) { return a.name.localeCompare(b.name); }
 
-/* --- APP LOGIC --- */
 document.addEventListener('DOMContentLoaded', () => {
-    // INIT DROPDOWNS
+    // Check if DB is loaded
+    if (typeof DB === 'undefined') {
+        alert("Database not loaded! Make sure 'data.js' is in the same folder.");
+        return;
+    }
+
+    // Sort Data
+    DB.weapons.sort(sortByName); DB.bosses.sort(sortByName);
+    
     fillSelect('weapon', DB.weapons);
     fillSelect('boss', DB.bosses);
     fillSelect('affinity', DB.affinities);
     fillSelect('ash', DB.ashes);
     fillSelect('shield', DB.shields);
+    fillSelect('buff', DB.buffs);
+    fillSelect('grease', DB.greases);
     
     document.querySelectorAll('.tal').forEach(s => {
         s.innerHTML = '<option value="">None</option>';
@@ -469,18 +357,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // EVENT LISTENERS
     document.querySelectorAll('input, select').forEach(el => {
         if(el.id === 'weapon') el.addEventListener('change', handleWeaponChange);
+        else if(el.id === 'affinity') el.addEventListener('change', updateGreaseLock);
         else if(el.id === 'search') el.addEventListener('keyup', renderLib);
+        else if(el.id === 'ash') el.addEventListener('change', () => showInfo('info-ash', DB.ashes.find(x=>x.id===el.value)));
+        else if(el.id === 'shield') el.addEventListener('change', () => showInfo('info-shield', DB.shields.find(x=>x.id===el.value)));
         else el.addEventListener('change', update);
     });
 
-    // DEFAULTS
+    // Listener for talismans to update intel box
+    document.querySelectorAll('.tal').forEach(sel => {
+        sel.addEventListener('change', () => {
+            const t = DB.talismans.find(x => x.id === sel.value);
+            const box = document.getElementById('tal-info-box');
+            if(t) {
+                box.innerHTML = `<span class="intel-scale">${t.name}</span><span class="intel-desc">${t.desc}</span>`;
+                box.classList.add('active');
+            } else {
+                box.classList.remove('active');
+            }
+            update();
+        });
+    });
+
+    // Default
     document.getElementById('weapon').value = 'rob';
     document.getElementById('boss').value = 'malenia';
     handleWeaponChange();
-    renderLib();
 });
 
 function fillSelect(id, arr) {
@@ -492,15 +396,51 @@ function fillSelect(id, arr) {
     });
 }
 
-function showInfo(id, dataObj) {
+/* --- INFO PANEL --- */
+function showInfo(id, item, scaleText) {
     const el = document.getElementById(id);
-    const item = dataObj; 
-    if(item && item.desc) {
-        el.innerHTML = `<span class="intel-title">${item.name}:</span> ${item.desc}`;
+    if (item) {
+        let html = "";
+        if (scaleText) html += `<span class="intel-scale">${scaleText}</span>`;
+        if (item.desc) html += `<span class="intel-desc">${item.desc}</span>`;
+        el.innerHTML = html;
         el.classList.add('active');
     } else {
         el.classList.remove('active');
-        el.innerHTML = '';
+        el.innerHTML = "";
+    }
+}
+
+function openLoc(type) {
+    const selectEl = type.startsWith('tal-') ? document.getElementById(type) : document.getElementById(type);
+    const id = selectEl.value;
+    let item;
+    
+    if (type === 'weapon') item = DB.weapons.find(x => x.id === id);
+    else if (type === 'shield') item = DB.shields.find(x => x.id === id);
+    else if (type === 'buff') item = DB.buffs.find(x => x.id === id);
+    else if (type === 'ash') item = DB.ashes.find(x => x.id === id);
+    else if (type.startsWith('tal-')) item = DB.talismans.find(x => x.id === id);
+
+    const modal = document.getElementById('modal');
+    const body = document.getElementById('modal-body');
+
+    if (!item || !item.loc) {
+        body.innerHTML = "Please select an item first.";
+    } else {
+        const searchUrl = `https://www.youtube.com/results?search_query=Elden+Ring+${item.name.replace(/ /g, '+')}+location`;
+        body.innerHTML = `
+            <div style="font-weight:bold; color:var(--gold); margin-bottom:10px; font-size:1.1rem;">${item.name}</div>
+            <div style="margin-bottom:15px;">${item.loc}</div>
+            <a href="${searchUrl}" target="_blank" class="video-btn">📺 Watch Location Guide</a>
+        `;
+    }
+    modal.style.display = 'flex';
+}
+
+function closeModal(e) {
+    if (!e || e.target.id === 'modal' || e.target.classList.contains('close-btn')) {
+        document.getElementById('modal').style.display = 'none';
     }
 }
 
@@ -509,80 +449,130 @@ function handleWeaponChange() {
     const aff = document.getElementById('affinity');
     const ash = document.getElementById('ash');
 
-    showInfo('info-weapon', w);
-
     if(w.type === 'Somber') {
         aff.innerHTML = '<option value="somber">Unique</option>'; aff.disabled = true;
         ash.innerHTML = `<option value="fixed">${w.skill}</option>`; ash.disabled = true;
+        
+        // Show Somber Info
+        let scaleTxt = "";
+        if(w.scale) {
+            scaleTxt = Object.entries(w.scale).map(([k,v]) => `${k.toUpperCase()} ${v}`).join(' / ');
+        }
+        showInfo('info-weapon', w, scaleTxt);
         document.getElementById('info-affinity').classList.remove('active');
         document.getElementById('info-ash').classList.remove('active');
+
     } else {
         aff.disabled = false; ash.disabled = false;
         fillSelect('affinity', DB.affinities);
         fillSelect('ash', DB.ashes);
-        // Smart Default
+        // Default Logic
         if(w.name.includes('Katana')) { aff.value='keen'; ash.value='unsheathe'; }
         else if(w.dmg.includes('Strike')) { aff.value='heavy'; ash.value='lion'; }
         else { aff.value='std'; ash.value='lion'; }
+        
+        // Initial Std Info
+        showInfo('info-weapon', w);
+        updateGreaseLock(); // Will trigger info update for affinity
     }
+    updateGreaseLock();
     update();
 }
 
+function updateGreaseLock() {
+    const w = DB.weapons.find(x => x.id === document.getElementById('weapon').value);
+    const affId = document.getElementById('affinity').value;
+    const greaseSel = document.getElementById('grease');
+
+    let canGrease = false;
+    let scaleTxt = "";
+
+    if (w.type === 'Somber') {
+        canGrease = w.buffable;
+        if(w.scale) scaleTxt = Object.entries(w.scale).map(([k,v]) => `${k.toUpperCase()} ${v}`).join(' / ');
+        showInfo('info-weapon', w, scaleTxt);
+    } else {
+        const aff = DB.affinities.find(x => x.id === affId);
+        if (aff) {
+            canGrease = aff.canBuff;
+            showInfo('info-affinity', aff);
+            
+            // Calc Approx Scale
+            let sStr='-', sDex='-', sInt='-', sFai='-', sArc='-';
+            if(w.stats.includes('str')) sStr = 'C'; 
+            if(w.stats.includes('dex')) sDex = 'C';
+            
+            if(aff.id === 'heavy') { sStr = 'A'; sDex = 'E'; }
+            if(aff.id === 'keen') { sDex = 'A'; sStr = 'E'; }
+            if(aff.id === 'qual') { sStr = 'B'; sDex = 'B'; }
+            if(aff.type === 'Magic') { sInt = 'B'; sStr='D'; sDex='D'; }
+            if(aff.type === 'Fire') { sStr = 'B'; } 
+            if(aff.type === 'Lightning') { sDex = 'B'; }
+            if(aff.type === 'Holy') { sFai = 'B'; }
+            if(aff.id === 'blood' || aff.id === 'occult') { sArc = 'B'; }
+
+            let parts = [];
+            if(sStr!='-') parts.push(`STR ${sStr}`);
+            if(sDex!='-') parts.push(`DEX ${sDex}`);
+            if(sInt!='-') parts.push(`INT ${sInt}`);
+            if(sFai!='-') parts.push(`FAI ${sFai}`);
+            if(sArc!='-') parts.push(`ARC ${sArc}`);
+            
+            showInfo('info-weapon', w, parts.join(' / '));
+        }
+    }
+
+    greaseSel.disabled = !canGrease;
+    if (!canGrease) greaseSel.value = "";
+}
+
 function update() {
-    // 1. GET STATS
     const s = {};
     ['vig','mnd','end','str','dex','int','fai','arc'].forEach(k => s[k] = parseInt(document.getElementById(k).value)||0);
     document.getElementById('lvl').innerText = Object.values(s).reduce((a,b)=>a+b,0)-79;
 
-    // 2. CONFIG
     const w = DB.weapons.find(x => x.id === document.getElementById('weapon').value);
     const b = DB.bosses.find(x => x.id === document.getElementById('boss').value);
     const style = document.getElementById('style').value;
-    const shieldVal = document.getElementById('shield').value;
-    const shield = DB.shields.find(x => x.id === shieldVal);
     
-    // Show Intel for dropdowns
-    if(w.type !== 'Somber') {
-        const affItem = DB.affinities.find(x => x.id === document.getElementById('affinity').value);
-        const ashItem = DB.ashes.find(x => x.id === document.getElementById('ash').value);
-        showInfo('info-affinity', affItem);
-        showInfo('info-ash', ashItem);
-    }
+    // --- RECOMMENDED TALISMANS ---
+    const recTals = document.getElementById('rec-tals');
+    let tals = [];
+    if(w.bleed) tals.push("Lord of Blood's Exultation (Bleed)");
+    if(w.skill && w.type==='Somber') tals.push("Shard of Alexander (Skill Dmg)");
+    if(style === 'jump') tals.push("Claw Talisman (Jump Atk)");
+    if(style === 'guard') tals.push("Curved Sword Talisman (Guard Counter)");
+    if(s.str < 20 && w.stats.includes('str')) tals.push("Starscourge Heirloom (+5 Str)");
+    if(tals.length === 0) tals.push("Dragoncrest Greatshield (Defense)", "Green Turtle (Stamina)");
+    recTals.innerHTML = `<ul>${tals.map(t=>`<li>${t}</li>`).join('')}</ul>`;
+
+    // --- RECOMMENDED WEAPONS (BOSS SPECIFIC) ---
+    const bossRecBox = document.getElementById('boss-rec-box');
+    let recWeaps = [];
+    if(b.weak.includes('Fire')) recWeaps.push("Blasphemous Blade", "Rivers of Blood", "Magma Blade");
+    if(b.weak.includes('Strike')) recWeaps.push("Giant-Crusher", "Star Fist", "Great Mace");
+    if(b.weak.includes('Pierce')) recWeaps.push("Bolt of Gransax", "Cross-Naginata");
+    if(b.weak.includes('Holy')) recWeaps.push("Ordovis's Greatsword", "Black Knife");
+    if(b.id === 'rykard') recWeaps = ["Serpent-Hunter (Required)"];
     
-    if (shield) showInfo('info-shield', shield);
-    else document.getElementById('info-shield').classList.remove('active');
+    bossRecBox.style.display = 'block';
+    bossRecBox.innerHTML = `<div class="box-title" style="color:var(--blue)">Top Counters vs ${b.name}</div>` + 
+                           recWeaps.map(n=>`<span class="tag">${n}</span>`).join(' ');
 
-    // Talisman Intel
-    const tals = [];
-    document.querySelectorAll('.tal').forEach(sel => {
-        if(sel.value) tals.push(DB.talismans.find(t => t.id === sel.value));
-    });
-    const talInfoBox = document.getElementById('tal-info-box');
-    if(tals.length > 0) {
-        const lastTal = tals[tals.length-1];
-        talInfoBox.innerHTML = `<span class="intel-title">${lastTal.name}:</span> ${lastTal.desc}`;
-        talInfoBox.classList.add('active');
-    } else {
-        talInfoBox.classList.remove('active');
+    // --- MATCHUP LOGIC ---
+    let aff;
+    if(w.type === 'Somber') aff = { id:'somber', type: w.dmg.split('/')[1]||'Phys' };
+    else {
+        const currentAffType = DB.affinities.find(x => x.id === document.getElementById('affinity').value);
+        aff = currentAffType || { id:'std', type:'Phys' };
     }
 
-    let aff, ashName;
-    if(w.type === 'Somber') {
-        aff = { id:'somber', type: w.dmg.split('/')[1]||'Phys' };
-        ashName = w.skill;
-    } else {
-        aff = DB.affinities.find(x => x.id === document.getElementById('affinity').value);
-        ashName = DB.ashes.find(x => x.id === document.getElementById('ash').value).name;
-    }
-
-    // 3. MATCHUP CALC
     let score = 0;
     let logs = [];
-    let synergy = [];
     let warn = [];
 
-    // Elements
-    const dType = (w.type==='Somber' ? w.dmg : (aff.type==='Phys' ? w.dmg : aff.type));
+    const currentAffType = aff.type || 'Phys';
+    const dType = (w.type==='Somber' ? w.dmg : (currentAffType==='Phys' ? w.dmg : currentAffType));
     const isBleed = w.bleed || aff.effect === 'Bleed' || aff.id === 'blood';
 
     if(dType.includes('Fire')) {
@@ -591,7 +581,7 @@ function update() {
     }
     if(dType.includes('Holy')) {
         if(b.weak.includes('Holy')) { score+=2; logs.push("✨ Boss weak to Holy"); }
-        if(b.resist.includes('Holy')) { score-=3; warn.push("Boss highly resists Holy."); }
+        if(b.resist.includes('Holy')) { score-=3; warn.push("Boss heavily resists Holy."); }
     }
     if(dType.includes('Strike') && b.weak.includes('Strike')) { score+=1; logs.push("🔨 Strike breaks armor"); }
     
@@ -600,53 +590,24 @@ function update() {
         if(b.resist.includes('Bleed')) { score-=2; warn.push("Boss immune/resist Bleed."); }
     }
 
-    // Playstyle Logic
-    if(style === 'jump') {
-        if (b.id === 'radagon') { score+=1; synergy.push("Jump attacks dodge stomps."); }
-    }
-    if(style === 'guard' || style === 'poke') {
-        if (b.id === 'malenia') { score-=2; warn.push("Do NOT shield against Malenia (Heals on block)."); }
-        if (b.id === 'radahn_dlc') { score+=2; synergy.push("Shield Poke is highly effective here."); }
-        
-        if (shield) {
-            if (shield.type === 'Small') {
-                warn.push("Small shields are bad for guarding. Use Medium/Great.");
-            } else if (shield.type === 'Greatshield') {
-                synergy.push("Greatshield offers superior stability.");
-            }
-        } else {
-             warn.push("Guard style selected but no shield equipped.");
-        }
-    }
-    if(style === 'parry') {
-        if (shield && (shield.id === 'buckler' || shield.skill.includes('Parry'))) {
-             if (b.id === 'rellana' || b.id === 'malenia' || b.id === 'radagon' || b.id === 'bell') {
-                 score+=2; synergy.push("This boss is parryable. Good choice.");
-             } else {
-                 warn.push("This boss cannot be parried easily/at all.");
-             }
-        } else {
-            warn.push("Parry style selected but shield lacks Parry skill.");
-        }
-    }
-    if(style === 'skill' && w.id === 'rob' && b.id === 'radagon') { score-=1; warn.push("Radagon resists Fire & Bleed."); }
+    // Verdict Engine
+    const shieldVal = document.getElementById('shield').value;
+    const hasShield = shieldVal !== "";
+    
+    let vText = `You are running a <b>${w.name}</b> build. `;
+    if (score >= 2) vText += `Excellent choice against ${b.name}. `;
+    else if (score <= -2) vText += `This matchup is tough. ${b.name} resists your damage type. `;
+    
+    if (isBleed && b.weak.includes('Bleed')) vText += "Your Bleed will shred their HP bar. ";
+    if (!hasShield && b.id === 'radahn_dlc') vText += "Consider a Greatshield for safety. ";
+    
+    document.getElementById('v-score').innerText = Math.max(0, Math.min(100, 50 + (score*15))) + "%";
+    document.getElementById('v-text').innerHTML = vText;
 
-    // 4. RECOMMENDATION ENGINE
-    let advice = "";
-    if(score < 0) {
-        // Search for better weapon
-        const better = DB.weapons.find(x => x.dmg.includes('Strike') && s.str > 30);
-        if(b.weak.includes('Strike') && better) advice = `Strategy: Switch to <b>${better.name}</b> (Strike) to exploit weakness.`;
-        else if(b.resist.includes('Bleed') && isBleed) advice = "Strategy: Switch Affinity to <b>Occult</b> or <b>Keen</b> to rely on physical damage.";
-        else advice = "Strategy: Try using Greases matching boss weakness.";
-    } else {
-        advice = `Good Match. Focus on ${style === 'skill' ? 'landing your Ash of War' : 'dodging and punishing'}.`;
-    }
-
-    // 5. RENDER
+    // Render Output
     const tierEl = document.getElementById('tier');
-    tierEl.className = `tier-banner ${score>=3 ? 'tier-s' : (score>=0 ? 'tier-a' : 'tier-c')}`;
-    tierEl.innerText = score>=3 ? "S-TIER (Excellent)" : (score>=0 ? "A-TIER (Solid)" : "C-TIER (Disadvantage)");
+    tierEl.className = `tier-banner ${score>=2 ? 'tier-s' : (score>=0 ? 'tier-a' : 'tier-c')}`;
+    tierEl.innerText = score>=2 ? "S-TIER (Excellent)" : (score>=0 ? "A-TIER (Solid)" : "C-TIER (Disadvantage)");
 
     const tBox = document.getElementById('tags');
     tBox.innerHTML = b.weak.map(t=>`<span class="tag t-weak">Weak: ${t}</span>`).join('') + 
@@ -657,10 +618,8 @@ function update() {
 
     if(warn.length) resBox.innerHTML += `<div class="analysis-box" style="border-color:var(--red)"><div class="box-title" style="color:var(--red)">Warnings</div>${warn.join('<br>')}</div>`;
     if(logs.length) resBox.innerHTML += `<div class="analysis-box" style="border-color:var(--gold)"><div class="box-title" style="color:var(--gold)">Matchup Intel</div>${logs.join('<br>')}</div>`;
-    if(synergy.length) resBox.innerHTML += `<div class="analysis-box" style="border-color:var(--purple)"><div class="box-title" style="color:var(--purple)">Playstyle Synergy</div>${synergy.join('<br>')}</div>`;
     
-    resBox.innerHTML += `<div class="rec-box"><div class="box-title" style="color:var(--blue)">Coach's Recommendation</div>${advice}</div>`;
-    resBox.innerHTML += `<div class="analysis-box" style="border-color:#555"><div class="box-title">Boss Tip</div>"${b.tip}"</div>`;
+    resBox.innerHTML += `<div class="analysis-box" style="border-color:#555"><div class="box-title">Boss Strategy</div>"${b.tip}"</div>`;
 }
 
 function switchTab(t) {
@@ -674,26 +633,13 @@ function renderLib() {
     const q = document.getElementById('search').value.toLowerCase();
     const list = document.getElementById('lib-list');
     list.innerHTML = '';
-    
-    // Merge Weapons & Shields for search
-    const allItems = [...DB.weapons, ...DB.shields];
-    
-    allItems.filter(w => w.name.toLowerCase().includes(q)).forEach(w => {
+    DB.weapons.filter(w => w.name.toLowerCase().includes(q)).forEach(w => {
         const d = document.createElement('div');
-        let meta = w.type;
-        if(w.dmg) meta += ` | ${w.dmg}`;
-        d.innerHTML = `<b style="color:#fff">${w.name}</b><br><small style="color:#777">${meta}</small>`;
+        d.innerHTML = `<b style="color:#fff">${w.name}</b><br><small style="color:#777">${w.type} | ${w.loc}</small>`;
         d.onclick = () => {
-            if(w.dmg) { // It's a weapon
-                document.getElementById('weapon').value = w.id;
-                handleWeaponChange();
-            } else { // It's a shield
-                document.getElementById('shield').value = w.id;
-                // Open the details to show shield selection
-                document.querySelector('details').open = true;
-            }
+            document.getElementById('weapon').value = w.id;
+            handleWeaponChange();
             switchTab('build');
-            update();
         };
         list.appendChild(d);
     });
